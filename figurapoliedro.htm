@@ -1,0 +1,140 @@
+//Nestor stiven Aguilar Garzon - 6000423
+<!DOCTYPE html>
+<html lang="en-GB">
+
+<head>
+  <meta charset="utf-8" />
+  <title>figura poliedro</title>
+  <style>
+    body {
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <script type="module">
+    ////esto se saco de chatgtp*/
+    import * as THREE from 'https://sebastiann16.github.io/CompG/three.module.js';
+    import { OrbitControls } from 'https://sebastiann16.github.io/CompG/OrbitControls.js';
+    var WIDTH = window.innerWidth;
+    var HEIGHT = window.innerHeight;
+    //creacion de la escena
+    var renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(WIDTH, HEIGHT);
+    renderer.setClearColor(0x08FFF0, 1);
+    document.body.appendChild(renderer.domElement);
+
+    var scene = new THREE.Scene();
+    //Posicion de la camara
+    var camera = new THREE.PerspectiveCamera(70, WIDTH / HEIGHT);
+    camera.position.z = 10;
+    camera.position.y = 4;
+    scene.add(camera);
+    const light = new THREE.AmbientLight(0xFFF005, 5);
+    scene.add(light);
+
+    //Con esta funcion se construyen los poligonos
+    function poligono(n, R) {
+      var angulo = (2 * Math.PI) / n;
+      //Aca se construyen los vertices
+      var vertices = [];
+      for (let i = 0; i < n + 1; i++) {
+        vertices[i] = [
+          R * Math.cos(i * angulo),
+          R * Math.sin(i * angulo),
+        ];
+      }
+      return vertices;
+    }
+
+    //Esta funcion es para construir poliedro
+    function construirPoliedro(n, R, h) {
+      // aqui creamos la geometria de el poliedro
+      var geometria = new THREE.BufferGeometry();
+
+      // Aqui obtenemos las coordenadas de los vertices
+      var baseVertices = poligono(n, R);
+
+      // Se crea el array
+      var vertices = [];
+
+      // Aqui agregue los vertices a la matriz
+      for (var i = 0; i < baseVertices.length; i++) {
+        var x = baseVertices[i][0];
+        var y = baseVertices[i][1];
+
+        // Vertices de la base inferior
+for (var i = 0; i < baseVertices.length; i++) {
+  var x = baseVertices[i][0];
+  var y = baseVertices[i][1];
+  vertices.push(x, y, 0);
+}
+
+// Vertices de la base superior
+for (var i = 0; i < baseVertices.length; i++) {
+  var x = baseVertices[i][0];
+  var y = baseVertices[i][1];
+  vertices.push(x, y, h);
+}
+var verticesArray = new Float32Array(vertices);
+
+geometria.setAttribute('position', new THREE.BufferAttribute(verticesArray, 3));
+
+// Creamos las caras
+var indices = [];
+for (var i = 0; i < n; i++) {
+  var baseVerticeIndex = i;
+  var siguienteBaseVerticeIndex = (i + 1) % baseVertices.length;
+  var parteSuperiorVerticeIndex = baseVerticeIndex + baseVertices.length;
+  var siguienteParteSuperiorVerticeIndex = siguienteBaseVerticeIndex + baseVertices.length;
+
+  // lateral
+  indices.push(baseVerticeIndex, siguienteBaseVerticeIndex, parteSuperiorVerticeIndex);
+  indices.push(siguienteBaseVerticeIndex, siguienteParteSuperiorVerticeIndex, parteSuperiorVerticeIndex);
+
+  // inferior
+  indices.push(baseVerticeIndex, siguienteBaseVerticeIndex, baseVerticeIndex + 1);
+
+  // superior
+  indices.push(parteSuperiorVerticeIndex, siguienteParteSuperiorVerticeIndex, parteSuperiorVerticeIndex + 1);
+}
+
+var indicesArray = new Uint32Array(indices);
+
+geometria.setIndex(new THREE.BufferAttribute(indicesArray, 1));
+
+geometria.computeVertexNormals();
+
+// Material y objeto
+var material = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+var poliedro = new THREE.Mesh(geometria, material);
+
+return poliedro;
+      }
+    }
+
+    var poliedro = construirPoliedro(6, 1, 2);
+    scene.add(poliedro);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    const axesHelper = new THREE.AxesHelper(1000);
+    scene.add(axesHelper);
+
+    const size = 1000;
+    const divisions = 1000;
+
+    const gridHelper = new THREE.GridHelper(size, divisions);
+    scene.add(gridHelper);
+    // movimiento de la camara y la escena
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+
+</html>
+
